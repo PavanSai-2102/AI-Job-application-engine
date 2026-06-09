@@ -4,6 +4,8 @@ import { authOptions } from "../../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 import { ResumeProfileSchema } from "@/lib/schemas";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   

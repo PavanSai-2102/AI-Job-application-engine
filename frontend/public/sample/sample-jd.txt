@@ -1,0 +1,28 @@
+Job Title: Senior Frontend Engineer (React/Next.js)
+Company: CloudSphere Inc.
+
+About the Role:
+CloudSphere is looking for a Senior Frontend Engineer to lead the development of our core cloud management platform. You will be instrumental in architecting scalable user interfaces and mentoring junior developers.
+
+Responsibilities:
+- Architect and develop complex, high-performance web applications using React and TypeScript.
+- Lead the migration of our main platform to Next.js for improved SEO and performance.
+- Build reusable UI components and establish a comprehensive design system.
+- Collaborate with backend engineers to define and consume GraphQL and REST APIs.
+- Optimize web applications for maximum speed and scalability.
+- Mentor junior engineers and participate in code reviews to ensure code quality.
+
+Requirements:
+- 5+ years of professional experience in frontend development.
+- Deep expertise in JavaScript, TypeScript, and React.
+- Strong experience with Next.js and server-side rendering patterns.
+- Proficiency with modern CSS frameworks (Tailwind CSS preferred).
+- Experience with state management libraries (Redux, Zustand, or Context API).
+- Solid understanding of web accessibility (WCAG) and responsive design principles.
+- Experience with CI/CD tools and cloud platforms (AWS or GCP).
+- Excellent communication and collaboration skills.
+
+Preferred Qualifications:
+- Experience building design systems from scratch.
+- Familiarity with GraphQL (Apollo Client).
+- Previous experience in a SaaS or cloud infrastructure domain.

@@ -1,0 +1,34 @@
+Alex Chen
+Full Stack Software Engineer
+San Francisco, CA | alex.chen@email.com | github.com/alexc
+
+PROFESSIONAL EXPERIENCE
+
+TechNova Solutions
+Software Engineer
+June 2021 – Present
+- Built and maintained RESTful APIs using Node.js and Express, serving over 10,000 daily active users.
+- Migrated legacy React frontend to Next.js, reducing initial load time by 30%.
+- Designed database schemas in PostgreSQL and optimized queries, cutting response times by 40%.
+- Integrated Stripe API for secure payment processing in the e-commerce module.
+- Collaborated with UX designers to implement accessible, responsive web interfaces using Tailwind CSS.
+- Set up CI/CD pipelines using GitHub Actions to automate testing and deployment to AWS.
+
+DataStream Analytics
+Junior Web Developer
+January 2019 – May 2021
+- Developed interactive data dashboards using React and D3.js.
+- Wrote unit and integration tests using Jest and React Testing Library, achieving 85% code coverage.
+- Assisted in containerizing applications using Docker for consistent local development environments.
+- Fixed UI bugs and resolved customer-reported issues in the main web portal.
+
+EDUCATION
+University of California, Berkeley
+Bachelor of Science in Computer Science
+Graduated: May 2018
+
+SKILLS
+Languages: JavaScript (ES6+), TypeScript, Python, HTML5, CSS3
+Frameworks: React, Next.js, Node.js, Express, Tailwind CSS
+Databases: PostgreSQL, MongoDB, Redis
+Tools: Git, Docker, AWS (S3, EC2), GitHub Actions

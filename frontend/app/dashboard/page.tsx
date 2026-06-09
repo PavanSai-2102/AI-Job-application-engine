@@ -22,10 +22,12 @@ export default function DashboardPage() {
     setJobs([]);
 
     try {
-      const res = await fetch("/api/jobs/search", {
+      // Call the Render backend directly from the browser to bypass Vercel's 10s timeout
+      const backendUrl = process.env.NEXT_PUBLIC_FASTAPI_BASE_URL || "https://ai-job-application-engine.onrender.com";
+      const res = await fetch(`${backendUrl}/api/scrape`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, location, sources: "all" }),
+        body: JSON.stringify({ title, location: location || "", sources: "all" }),
       });
 
       if (!res.ok) throw new Error("Search failed");

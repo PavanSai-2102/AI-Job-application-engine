@@ -124,6 +124,12 @@ def send_email_endpoint(req: SendEmailRequest):
         sender_name=os.getenv("SENDER_NAME", "")
     )
     
+    if not config.smtp_user or not config.smtp_password:
+        raise HTTPException(
+            status_code=400, 
+            detail="SMTP credentials (SMTP_USER, SMTP_PASSWORD) are not configured on the backend."
+        )
+    
     try:
         result = send_email(email, config)
         if result.success:

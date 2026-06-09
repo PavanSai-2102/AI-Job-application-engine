@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import prisma from "@/lib/prisma";
 
+import nodemailer from "nodemailer";
+
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
@@ -28,31 +30,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Call Python FastAPI The Closer service for SMTP sending
-    const fastApiUrl = process.env.FASTAPI_BASE_URL 
-      ? `${process.env.FASTAPI_BASE_URL}/api/email/send`
-      : "http://localhost:8000/api/email/send";
-    
-    // We wrap the request in a try/catch to record the OutreachLog even if it fails
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPassword = process.env.SMTP_PASSWORD;
+    const senderName = process.env.SENDER_NAME || "AI Job Application Engine";
+
+    if (!smtpUser || !smtpPassword) {
+      return NextResponse.json(
+        { error: "SMTP credentials (SMTP_USER, SMTP_PASSWORD) are not configured in Vercel." }, 
+        { status: 400 }
+      );
+    }
+
     let status = "FAILED";
     let errorMessage = null;
     let messageId = null;
 
     try {
-      const response = await fetch(fastApiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, body, recipient_email }),
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: smtpUser,
+          pass: smtpPassword,
+        },
       });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText);
-      }
+      const info = await transporter.sendMail({
+        from: `"${senderName}" <${smtpUser}>`,
+        to: recipient_email,
+        subject: subject,
+        text: body,
+      });
 
-      const data = await response.json();
       status = "SENT";
-      messageId = data.message_id;
+      messageId = info.messageId;
     } catch (err: any) {
       errorMessage = err.message;
     }

@@ -32,7 +32,7 @@ export default function KanbanPage() {
   const tailored = applications.filter(a => a.status === "TAILORING");
   const outreach = applications.filter(a => a.status === "OUTREACH_SENT");
 
-  const Column = ({ title, icon: Icon, color, items, actionLabel, actionLinkPrefix }: any) => (
+  const Column = ({ title, icon: Icon, color, items, actionLabel, getActionLink }: any) => (
     <div className={`flex flex-col bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-2xl overflow-hidden h-full`}>
       <div className={`p-4 border-b border-slate-800 flex items-center justify-between ${color}`}>
         <div className="flex items-center font-bold text-lg">
@@ -62,8 +62,8 @@ export default function KanbanPage() {
               </div>
               <p className="text-sm text-slate-400 mb-4">{app.job.company}</p>
               
-              {actionLabel && actionLinkPrefix && (
-                <Link href={`${actionLinkPrefix}${app.id}`}>
+              {actionLabel && getActionLink && (
+                <Link href={getActionLink(app.id)}>
                   <Button className="w-full bg-slate-800 hover:bg-slate-700 text-xs py-1 h-8">
                     {actionLabel}
                   </Button>
@@ -104,7 +104,7 @@ export default function KanbanPage() {
               color="text-slate-300" 
               items={discovered} 
               actionLabel="Tailor Resume"
-              actionLinkPrefix="/tailor?applicationId=" // Requires modifying /tailor page to accept application ID in a real app
+              getActionLink={(id: string) => `/tailor?applicationId=${id}`}
             />
             <Column 
               title="Tailored" 
@@ -112,7 +112,7 @@ export default function KanbanPage() {
               color="text-indigo-400" 
               items={tailored} 
               actionLabel="Draft Outreach"
-              actionLinkPrefix="/applications/" // goes to /applications/[id]/outreach
+              getActionLink={(id: string) => `/applications/${id}/outreach`}
             />
             <Column 
               title="Outreach Sent" 
@@ -120,7 +120,7 @@ export default function KanbanPage() {
               color="text-emerald-400" 
               items={outreach} 
               actionLabel="View Status"
-              actionLinkPrefix="/applications/"
+              getActionLink={(id: string) => `/applications/${id}/outreach`}
             />
           </div>
         )}

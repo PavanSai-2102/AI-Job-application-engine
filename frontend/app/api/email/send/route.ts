@@ -47,11 +47,15 @@ export async function POST(request: Request) {
 
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
           user: smtpUser,
           pass: smtpPassword,
         },
+        connectionTimeout: 5000,
+        socketTimeout: 5000,
       });
 
       const info = await transporter.sendMail({

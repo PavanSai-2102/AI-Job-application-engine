@@ -6,14 +6,14 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export default async function TailorInputPage({ searchParams }: { searchParams: Promise<{ jobId?: string }> }) {
+export default async function TailorInputPage({ searchParams }: { searchParams: Promise<{ applicationId?: string }> }) {
   let jdText = "";
   let resumeText = "";
   let applicationId = null;
 
   const params = await searchParams;
 
-  if (params.jobId) {
+  if (params.applicationId) {
     const session = await getServerSession(authOptions);
     let userId = session?.user ? (session.user as any).id : null;
     
@@ -24,7 +24,7 @@ export default async function TailorInputPage({ searchParams }: { searchParams: 
     
     if (userId) {
       const app = await prisma.application.findFirst({
-        where: { jobId: params.jobId, userId },
+        where: { id: params.applicationId, userId },
         include: { job: true, user: true }
       });
       

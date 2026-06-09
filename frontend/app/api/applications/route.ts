@@ -6,29 +6,29 @@ import prisma from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  
-  // For demo/development, if not authenticated, fallback to a default user
-  let userId = session?.user ? (session.user as any).id : null;
-
-  if (!userId) {
-    // Automatically create or fetch a default user for testing
-    let defaultUser = await prisma.user.findFirst({
-      where: { email: "demo@example.com" }
-    });
-    
-    if (!defaultUser) {
-      defaultUser = await prisma.user.create({
-        data: {
-          email: "demo@example.com",
-          name: "Demo User"
-        }
-      });
-    }
-    userId = defaultUser.id;
-  }
-
   try {
+    const session = await getServerSession(authOptions);
+    
+    // For demo/development, if not authenticated, fallback to a default user
+    let userId = session?.user ? (session.user as any).id : null;
+
+    if (!userId) {
+      // Automatically create or fetch a default user for testing
+      let defaultUser = await prisma.user.findFirst({
+        where: { email: "demo@example.com" }
+      });
+      
+      if (!defaultUser) {
+        defaultUser = await prisma.user.create({
+          data: {
+            email: "demo@example.com",
+            name: "Demo User"
+          }
+        });
+      }
+      userId = defaultUser.id;
+    }
+
     const jobData = await request.json();
     
     // 1. Create or Find the Job Opportunity
@@ -81,7 +81,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, application, job });
   } catch (error) {
     console.error("Save Application API Error:", error);
-    return NextResponse.json({ error: "Failed to save application" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to save application", 
+      details: error instanceof Error ? error.message : String(error) 
+    }, { status: 500 });
   }
 }
 

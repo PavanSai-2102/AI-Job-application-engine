@@ -67,7 +67,17 @@ export default function OutreachPage({ params }: { params: Promise<{ id: string 
         }),
       });
       
-      if (!res.ok) throw new Error("Failed to send email");
+      if (!res.ok) {
+        let errMessage = "Failed to send email";
+        try {
+          const data = await res.json();
+          if (data.details) errMessage = data.details;
+          else if (data.error) errMessage = data.error;
+        } catch (e) {
+          // fallback to standard error
+        }
+        throw new Error(errMessage);
+      }
       setStatus("SENT");
       toast.success("Email sent successfully!");
     } catch (err: any) {

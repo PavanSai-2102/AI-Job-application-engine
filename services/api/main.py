@@ -87,9 +87,9 @@ def draft_email(req: DraftEmailRequest):
     contact = ContactRecord(**req.dict())
     
     # In a real setup, AppConfig would load from .env. Here we set it up with LLM enabled
-    # Assuming Groq API key is in the environment
     config = AppConfig(
         llm_enabled=True,
+        llm_api_key=os.getenv("GROQ_API_KEY"),
         llm_model="llama-3.3-70b-versatile"
     )
     

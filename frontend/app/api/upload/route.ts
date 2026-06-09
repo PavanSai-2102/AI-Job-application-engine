@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { extractTextFromFile } from "../../../lib/parseFile";
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 30; // seconds (Vercel Hobby: 10s, Pro: 60s)
 

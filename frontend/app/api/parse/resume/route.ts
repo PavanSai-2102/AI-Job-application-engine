@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { parseResume } from "../../../../lib/parseResume";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 const RequestSchema = z.object({
   resumeText: z.string().max(10000, "Resume text exceeds 10,000 character limit. Please shorten your input."),

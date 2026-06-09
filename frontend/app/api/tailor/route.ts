@@ -6,6 +6,7 @@ import { applyGuardrails } from "../../../lib/guardrails";
 import { ResumeProfileSchema, JobDescriptionProfileSchema, MatchScoreSchema } from "../../../lib/schemas";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 60; // Tailor runs 2 parallel LLM calls
 
 const RequestSchema = z.object({

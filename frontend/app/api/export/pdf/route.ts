@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateTailoredResumePDF, generateComparisonPDF } from "@/lib/generatePDF";
 
 // Enforce Node.js runtime because @react-pdf/renderer uses native Node APIs (like fs, path, etc.)
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 function stripEmojis(obj: any): any {

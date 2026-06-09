@@ -3,6 +3,7 @@ import { z } from "zod";
 import { scoreMatch } from "../../../lib/scoreMatch";
 import { ResumeProfileSchema, JobDescriptionProfileSchema } from "../../../lib/schemas";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const RequestSchema = z.object({

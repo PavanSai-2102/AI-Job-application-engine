@@ -1,9 +1,13 @@
 import Groq from "groq-sdk";
 import { z } from "zod";
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let _groq: Groq | null = null;
+function getGroq(): Groq {
+  if (!_groq) {
+    _groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return _groq;
+}
 
 export class LLMParseError extends Error {
   constructor(message: string) {
@@ -43,7 +47,7 @@ export async function callLLM<T>(
 
   while (attempts <= maxRetries) {
     try {
-      const response = await groq.chat.completions.create({
+      const response = await getGroq().chat.completions.create({
         messages: [{ role: "user", content: currentPrompt }],
         model,
         response_format: { type: "json_object" },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { parseJD } from "../../../../lib/parseJD";
 
+export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 const RequestSchema = z.object({

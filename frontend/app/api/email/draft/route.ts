@@ -52,9 +52,28 @@ export async function POST(request: Request) {
     
     // We pass the tailored resume or base resume as background
     const tailoredContent = application.tailoredResume?.tailoredContent as any;
-    const candidate_background = tailoredContent 
-      ? JSON.stringify(tailoredContent.summary) + " " + JSON.stringify(tailoredContent.experience)
-      : "Experienced professional in this field.";
+    let candidate_background = "Experienced professional in this field.";
+    
+    if (tailoredContent) {
+      const summary = tailoredContent.tailoredSummary || "";
+      const experience = tailoredContent.tailoredExperience?.map((exp: any) => ({
+        company: exp.company,
+        title: exp.title,
+        bullets: exp.bullets.map((b: any) => b.tailored)
+      })) || [];
+      
+      candidate_background = JSON.stringify({ summary, experience });
+    } else if (application.user.baseResume) {
+      const base = application.user.baseResume as any;
+      candidate_background = JSON.stringify({
+        summary: base.summary,
+        experience: base.experience?.map((exp: any) => ({
+          company: exp.company,
+          title: exp.title,
+          bullets: exp.bullets
+        }))
+      });
+    }
 
     // Call Python FastAPI The Closer service
     const fastApiUrl = process.env.FASTAPI_BASE_URL 

@@ -6,6 +6,8 @@ import { TailoringSessionProvider } from "@/context/TailoringSessionContext";
 import { Toaster } from "@/components/ui/sonner";
 import { ProgressBar } from "@/components/ProgressBar";
 import { DemoModeBanner } from "@/components/DemoModeBanner";
+import { Navbar } from "@/components/Navbar";
+import Link from "next/link";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Resume Shapeshifter",
-  description: "AI-powered JD-to-resume tailoring engine.",
+  title: "AI Job Application Engine",
+  description: "End-to-end AI-powered job search, resume tailoring, and cold email outreach platform.",
 };
 
 export default function RootLayout({
@@ -34,7 +36,10 @@ export default function RootLayout({
               <header className="border-b bg-card">
                 <DemoModeBanner />
                 <div className="max-w-7xl mx-auto p-4 flex items-center justify-between">
-                  <h1 className="text-xl font-bold tracking-tight text-primary">Resume Shapeshifter</h1>
+                  <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <h1 className="text-xl font-bold tracking-tight text-primary">AI Job Application Engine</h1>
+                  </Link>
+                  <Navbar />
                 </div>
                 <div className="border-t bg-muted/20">
                   <ProgressBar />
@@ -49,3 +54,4 @@ export default function RootLayout({
     </html>
   );
 }
+

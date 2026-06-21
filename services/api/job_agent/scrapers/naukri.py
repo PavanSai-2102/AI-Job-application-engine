@@ -1,180 +1,110 @@
 """
-Naukri scraper — uses Playwright (headless browser) to render the JavaScript-heavy
+Naukri scraper — uses Firecrawl to render the JavaScript-heavy
 page, then parses the fully rendered HTML with BeautifulSoup.
-
-Naukri.com is a fully client-side rendered React (Next.js) application.
-Simple HTTP requests return empty job data because listings are loaded
-via JavaScript after page load. Playwright launches a real headless
-browser to render the page, then we extract the HTML and parse it.
 """
 
 import logging
+import os
 import re
-import time
 from typing import List
+
+from dotenv import load_dotenv
 
 from job_agent.models import Job
 from job_agent.scrapers import BaseScraper
 
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+
 
 class NaukriScraper(BaseScraper):
-    """Scrapes job listings from Naukri.com using Playwright + BeautifulSoup."""
+    """Scrapes job listings from Naukri.com using Firecrawl + BeautifulSoup."""
 
     BASE_URL = "https://www.naukri.com"
-    MAX_PAGES = 2  # Limit pages to avoid detection
+    MAX_PAGES = 2  # Limit pages to avoid detection/high costs
 
     @property
     def source_name(self) -> str:
         return "Naukri"
 
+    def __init__(self):
+        """Initialize the Firecrawl client."""
+        self.api_key = os.getenv("FIRECRAWL_API_KEY")
+        self.app = None
+
+        if not self.api_key or self.api_key == "your_api_key_here":
+            logger.warning(
+                "[Naukri] FIRECRAWL_API_KEY not set or is placeholder. "
+                "Set it in your .env file. Naukri scraping will be skipped."
+            )
+        else:
+            try:
+                from firecrawl import FirecrawlApp
+                self.app = FirecrawlApp(api_key=self.api_key)
+                logger.info("[Naukri] Firecrawl client initialized successfully.")
+            except ImportError:
+                logger.error(
+                    "[Naukri] firecrawl-py is not installed. "
+                    "Run: pip install firecrawl-py"
+                )
+            except Exception as e:
+                logger.error(f"[Naukri] Failed to initialize Firecrawl: {e}")
+
     def search(self, job_title: str, location: str = None) -> List[Job]:
         """
-        Search Naukri for jobs matching the given title.
-
-        Uses Playwright to render the page in a headless browser,
-        waits for job cards to load, then parses the HTML.
-
-        Args:
-            job_title: The job title/keyword to search for.
-            location: Optional location constraint (e.g. 'Hyderabad').
-
-        Returns:
-            List of matching Job objects.
+        Search Naukri for jobs matching the given title using Firecrawl.
         """
-        logger.info(f"[Naukri] Searching for: '{job_title}' (Location: {location})")
-
-        try:
-            from playwright.sync_api import sync_playwright
-        except ImportError:
-            logger.error(
-                "[Naukri] playwright is not installed. "
-                "Run: pip install playwright && playwright install chromium"
-            )
+        if not self.app:
+            logger.warning("[Naukri] Firecrawl not available. Returning empty results.")
             return []
+
+        logger.info(f"[Naukri] Searching for: '{job_title}' (Location: {location})")
 
         all_jobs = []
         slug = self._slugify(job_title)
         keyword_words = job_title.lower().split()
 
-        with sync_playwright() as p:
+        for page_num in range(1, self.MAX_PAGES + 1):
+            url = self._build_url(slug, page_num, location)
+            logger.info(f"[Naukri] Loading page {page_num}: {url}")
+
             try:
-                # Try to use actual Google Chrome installed on Mac to bypass Akamai
-                browser = p.chromium.launch(
-                    headless=True,
-                    channel="chrome",
-                    args=[
-                        "--disable-blink-features=AutomationControlled",
-                        "--no-sandbox",
-                    ]
-                )
-            except Exception as e:
-                logger.warning(
-                    f"[Naukri] Could not launch Chrome channel, falling back to default Chromium: {e}"
-                )
-                browser = p.chromium.launch(
-                    headless=True,
-                    args=[
-                        "--disable-blink-features=AutomationControlled",
-                        "--no-sandbox",
-                    ]
+                # Use Firecrawl to scrape the page and get HTML
+                result = self.app.scrape_url(
+                    url,
+                    formats=["html"],
+                    wait_for=5000,  # Wait 5s for JS to render
                 )
 
-            context = browser.new_context(
-                user_agent=(
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0.0.0 Safari/537.36"
-                ),
-                viewport={"width": 1440, "height": 900},
-                locale="en-US,en;q=0.9",
-            )
-            page = context.new_page()
-
-            # Inject script to override navigator.webdriver to bypass Akamai
-            page.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', {
-                    get: () => undefined
-                });
-                Object.defineProperty(navigator, 'plugins', {
-                    get: () => [1, 2, 3, 4, 5]
-                });
-                window.chrome = {
-                    runtime: {}
-                };
-            """)
-
-            # Dict to store intercepted JSON payloads mapped by page number
-            intercepted_jsons = {}
-
-            def handle_response(response):
-                if "jobapi" in response.url and "/v3/search" in response.url:
-                    try:
-                        import urllib.parse
-                        parsed = urllib.parse.urlparse(response.url)
-                        query = urllib.parse.parse_qs(parsed.query)
-                        p_num = int(query.get("pageNo", [1])[0])
-                    except Exception:
-                        p_num = None
-                    try:
-                        intercepted_jsons[p_num] = response.json()
-                        logger.info(f"[Naukri] Intercepted search API response for page {p_num}")
-                    except Exception as e:
-                        logger.error(f"[Naukri] Failed to parse intercepted API response: {e}")
-
-            page.on("response", handle_response)
-
-            for page_num in range(1, self.MAX_PAGES + 1):
-                url = self._build_url(slug, page_num, location)
-                logger.info(f"[Naukri] Loading page {page_num}: {url}")
-
-                try:
-                    page.goto(url, wait_until="domcontentloaded", timeout=30000)
-
-                    # Wait for the job listing container to appear (up to 15s)
-                    page.wait_for_selector(
-                        "#listContainer",
-                        timeout=15000,
-                    )
-
-                    # Give extra time for network activity and rendering
-                    page.wait_for_timeout(3000)
-
-                    # Check if we successfully intercepted the JSON response
-                    json_data = intercepted_jsons.get(page_num) or intercepted_jsons.get(None)
-                    jobs = []
-
-                    if json_data:
-                        logger.info(f"[Naukri] Parsing intercepted JSON for page {page_num}...")
-                        jobs = self._parse_json(json_data, keyword_words)
-                        # Clean up to prevent accidental reuse
-                        intercepted_jsons.pop(page_num, None)
-                        intercepted_jsons.pop(None, None)
-
-                    if not jobs:
-                        # Fallback: parse rendered DOM if interception was empty or failed
-                        logger.info(f"[Naukri] Interception failed/empty. Falling back to HTML DOM parsing...")
-                        html = page.content()
-                        logger.info(f"[Naukri] Page rendered HTML length: {len(html)}")
-                        jobs = self._parse_html(html, keyword_words)
-
-                    if not jobs:
-                        logger.info(f"[Naukri] No jobs found on page {page_num}. Stopping.")
-                        break
-
-                    all_jobs.extend(jobs)
-                    logger.info(f"[Naukri] Page {page_num}: found {len(jobs)} jobs")
-
-                    # Polite delay between pages
-                    if page_num < self.MAX_PAGES:
-                        time.sleep(2)
-
-                except Exception as e:
-                    logger.error(f"[Naukri] Failed to load page {page_num}: {e}")
+                if not result:
+                    logger.warning(f"[Naukri] Firecrawl returned empty result for page {page_num}.")
                     break
 
-            browser.close()
+                html = ""
+                if isinstance(result, dict):
+                    html = result.get("html", "")
+                else:
+                    html = getattr(result, "html", "")
+
+                if not html:
+                    logger.warning(f"[Naukri] No HTML content in Firecrawl response for page {page_num}.")
+                    break
+
+                logger.info(f"[Naukri] Page rendered HTML length: {len(html)}")
+                jobs = self._parse_html(html, keyword_words)
+
+                if not jobs:
+                    logger.info(f"[Naukri] No jobs found on page {page_num}. Stopping.")
+                    break
+
+                all_jobs.extend(jobs)
+                logger.info(f"[Naukri] Page {page_num}: found {len(jobs)} jobs")
+
+            except Exception as e:
+                logger.error(f"[Naukri] Firecrawl scraping failed on page {page_num}: {e}")
+                break
 
         logger.info(f"[Naukri] Total jobs found: {len(all_jobs)}")
         return all_jobs
